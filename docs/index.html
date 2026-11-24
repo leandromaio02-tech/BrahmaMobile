@@ -1,0 +1,262 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Brahma Mobile — live avatar playground</title>
+<style>
+  :root{--bg:#0B0D17;--card:#151A2C;--line:#6C5CE7;--acc:#A48BFF;--cy:#7EF9FF;--tx:#E8ECFF}
+  *{box-sizing:border-box}
+  body{margin:0;background:radial-gradient(1200px 600px at 20% -10%,#1b1440,#0B0D17 60%);color:var(--tx);
+       font:15px/1.5 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+  header{padding:22px 26px;border-bottom:1px solid #222a44;display:flex;gap:14px;align-items:center;flex-wrap:wrap}
+  header h1{margin:0;font-size:19px;letter-spacing:.12em;color:var(--acc)}
+  header .tag{color:#9aa4c7;font-size:13px}
+  .pill{font-size:12px;padding:3px 9px;border:1px solid var(--line);border-radius:20px;color:var(--cy)}
+  .layout{display:grid;grid-template-columns:minmax(0,1fr) 360px;gap:18px;padding:18px;max-width:1200px;margin:0 auto}
+  @media(max-width:900px){.layout{grid-template-columns:1fr}}
+  .stage{position:relative;background:rgba(21,26,44,.55);border:1px solid #222a44;border-radius:18px;overflow:hidden;min-height:420px}
+  canvas{display:block;width:100%;height:100%}
+  .hint{position:absolute;left:0;right:0;bottom:10px;text-align:center;font-size:12px;color:#8f97b8;pointer-events:none}
+  .panel{display:flex;flex-direction:column;gap:14px}
+  section{background:var(--card);border:1px solid #222a44;border-radius:16px;padding:14px}
+  h2{margin:0 0 10px;font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:#9aa4c7}
+  .row{display:flex;flex-wrap:wrap;gap:8px}
+  button{background:#222a44;color:var(--tx);border:1px solid #333d63;border-radius:10px;padding:8px 12px;cursor:pointer;font-size:13px}
+  button:hover{border-color:var(--acc)}
+  button.on{background:var(--acc);color:#0B0D17;border-color:var(--acc);font-weight:600}
+  input[type=text]{width:100%;background:#0e1220;border:1px solid #333d63;color:var(--tx);border-radius:10px;padding:9px 11px;font-size:13px}
+  label{font-size:12px;color:#9aa4c7;display:block;margin:10px 0 4px}
+  .chat{height:150px;overflow:auto;background:#0e1220;border:1px solid #2a3353;border-radius:10px;padding:9px;font-size:13px}
+  .chat div{margin:4px 0}.chat b{color:var(--cy)}
+  .links a{color:var(--cy);text-decoration:none;display:inline-block;margin:4px 8px 0 0;font-size:13px}
+  .links a:hover{text-decoration:underline}
+</style>
+</head>
+<body>
+<header>
+  <h1>BRAHMA MOBILE</h1>
+  <span class="tag">the same Three.js avatar that floats on your phone — running right here in your browser</span>
+  <span class="pill">live playground</span>
+</header>
+
+<div class="layout">
+  <div class="stage">
+    <canvas id="c"></canvas>
+    <div class="hint">drag to spin &middot; move your pointer and the eyes follow &middot; tap the face to wake him</div>
+  </div>
+
+  <div class="panel">
+    <section>
+      <h2>Expressions</h2>
+      <div class="row" id="expr">
+        <button data-e="neutral" class="on">neutral</button>
+        <button data-e="happy">happy</button>
+        <button data-e="thinking">thinking</button>
+        <button data-e="surprised">surprised</button>
+        <button data-e="speaking">speaking</button>
+      </div>
+    </section>
+
+    <section>
+      <h2>Make him talk</h2>
+      <input id="say" type="text" placeholder="type something, e.g. hello brahma" maxlength="120"/>
+      <div class="row" style="margin-top:8px">
+        <button id="speak">Speak</button>
+        <button id="stop">Stop</button>
+      </div>
+    </section>
+
+    <section>
+      <h2>Tuning</h2>
+      <label>Idle bob speed <span id="spdVal">1.0</span></label>
+      <input id="speed" type="range" min="0" max="3" step="0.1" value="1"/>
+      <label>Avatar scale <span id="scaleVal">1.0</span></label>
+      <input id="scale" type="range" min="0.6" max="1.4" step="0.05" value="1"/>
+      <label style="margin-top:10px"><input id="blink" type="checkbox" checked/> Blink</label>
+    </section>
+
+    <section>
+      <h2>Reflex playground</h2>
+      <input id="cmd" type="text" placeholder='try: "open whatsapp" or "volume 40"' maxlength="80"/>
+      <div class="row" style="margin-top:8px">
+        <button id="run">Run command</button>
+        <button id="fill">Surprise me</button>
+      </div>
+      <div class="chat" id="chat" style="margin-top:8px"></div>
+    </section>
+
+    <section class="links">
+      <h2>Get the real thing</h2>
+      <a href="https://github.com/leandromaio02-tech/BrahmaMobile#readme">Repository &amp; setup</a>
+      <a href="https://github.com/leandromaio02-tech/BrahmaMobile/actions">Latest build (APK artifact)</a>
+      <a href="https://github.com/leandromaio02-tech/BrahmaMobile/discussions">Discussions</a>
+    </section>
+  </div>
+</div>
+
+<script src="three.min.js"></script>
+<script>
+(function(){
+  var canvas = document.getElementById('c');
+  var stage = canvas.parentElement;
+  var renderer = new THREE.WebGLRenderer({canvas:canvas, alpha:true, antialias:true});
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+  renderer.setClearColor(0x000000, 0);
+
+  var scene = new THREE.Scene();
+  var camera = new THREE.PerspectiveCamera(45, 1, 0.1, 100);
+  camera.position.set(0, 0, 7.2);
+
+  function resize(){
+    var w = stage.clientWidth || 600, h = stage.clientHeight || 420;
+    renderer.setSize(w, h, false);
+    camera.aspect = w / h; camera.updateProjectionMatrix();
+  }
+  window.addEventListener('resize', resize); resize();
+
+  scene.add(new THREE.AmbientLight(0xffffff, 0.85));
+  var key = new THREE.DirectionalLight(0xffffff, 1.1); key.position.set(3,4,5); scene.add(key);
+  var rim = new THREE.PointLight(0x6c5ce7, 1.4); rim.position.set(-3,-2,3); scene.add(rim);
+
+  var root = new THREE.Group(); scene.add(root);
+  var bodyMat = new THREE.MeshPhongMaterial({color:0x6c5ce7, shininess:60});
+  var body = new THREE.Mesh(new THREE.SphereGeometry(1.22,32,24), bodyMat);
+  body.scale.set(1,1.08,0.92); body.position.y=-0.35; root.add(body);
+  var visor = new THREE.Mesh(new THREE.SphereGeometry(0.95,32,24),
+      new THREE.MeshPhongMaterial({color:0x10131f, shininess:110, transparent:true, opacity:0.97}));
+  visor.scale.set(1,0.72,0.55); visor.position.set(0,0.18,0.95); root.add(visor);
+  var eyeGeo = new THREE.SphereGeometry(0.17,20,16);
+  var eyeMat = new THREE.MeshBasicMaterial({color:0x7ef9ff});
+  var eyeL = new THREE.Mesh(eyeGeo,eyeMat), eyeR = new THREE.Mesh(eyeGeo,eyeMat);
+  eyeL.position.set(-0.36,0.22,1.42); eyeR.position.set(0.36,0.22,1.42); root.add(eyeL,eyeR);
+  var mouthMat = new THREE.MeshBasicMaterial({color:0x7ef9ff});
+  var mouth = new THREE.Mesh(new THREE.TorusGeometry(0.27,0.045,8,24,Math.PI), mouthMat);
+  mouth.position.set(0,-0.18,1.45); mouth.rotation.z=Math.PI; root.add(mouth);
+  var antenna = new THREE.Mesh(new THREE.CylinderGeometry(0.035,0.035,0.5,8), bodyMat);
+  antenna.position.set(0,1.28,0); root.add(antenna);
+  var bulbMat = new THREE.MeshBasicMaterial({color:0xff7ab6, transparent:true});
+  var bulb = new THREE.Mesh(new THREE.SphereGeometry(0.14,16,12), bulbMat);
+  bulb.position.set(0,1.58,0); root.add(bulb);
+
+  var EXPR = {
+    neutral:{eye:0x7ef9ff,body:0x6c5ce7,bulb:0xff7ab6,smile:0},
+    happy:{eye:0xffe066,body:0x00b894,bulb:0xffe066,smile:0.55},
+    thinking:{eye:0xa29bfe,body:0x574b90,bulb:0xa29bfe,smile:-0.15},
+    surprised:{eye:0xff7675,body:0xe17055,bulb:0xff7675,smile:0.28},
+    speaking:{eye:0x81ecec,body:0x0984e3,bulb:0x81ecec,smile:0.2}
+  };
+  var state = {expr:'neutral', talk:0, t:0, spin:0, targetSpin:0, speed:1, scale:1, blinkOn:true};
+
+  function setExpr(name){
+    var e = EXPR[name] || EXPR.neutral;
+    state.expr = EXPR[name] ? name : 'neutral';
+    eyeMat.color.setHex(e.eye); bodyMat.color.setHex(e.body); bulbMat.color.setHex(e.bulb);
+    document.querySelectorAll('#expr button').forEach(function(b){
+      b.classList.toggle('on', b.dataset.e === state.expr);
+    });
+  }
+  document.querySelectorAll('#expr button').forEach(function(b){
+    b.addEventListener('click', function(){ setExpr(b.dataset.e); log('expression', b.dataset.e); });
+  });
+
+  // drag to spin
+  var dragging=false, lastX=0;
+  stage.addEventListener('pointerdown', function(e){ dragging=true; lastX=e.clientX; });
+  window.addEventListener('pointerup', function(){ dragging=false; });
+  window.addEventListener('pointermove', function(e){
+    if (dragging) { state.targetSpin += (e.clientX-lastX)*0.01; lastX=e.clientX; }
+    var r = stage.getBoundingClientRect();
+    var nx = ((e.clientX-r.left)/r.width)*2-1, ny = ((e.clientY-r.top)/r.height)*2-1;
+    if (!isNaN(nx)) { state.lookX = nx; state.lookY = ny; }
+  });
+  canvas.addEventListener('pointerdown', function(){ if(!dragging) setExpr('happy'); });
+
+  // speech
+  var synth = window.speechSynthesis;
+  function speak(text){
+    if (!text) return;
+    setExpr('speaking'); state.talk = Math.max(state.talk, Math.min(2.5, text.length/18));
+    if (synth) { try { synth.cancel(); var u=new SpeechSynthesisUtterance(text); u.pitch=1.1; u.rate=1.05; synth.speak(u);} catch(e){} }
+    log('brahma', text);
+  }
+  document.getElementById('speak').addEventListener('click', function(){
+    var v=document.getElementById('say').value.trim(); speak(v||'Hello, I am Brahma.');
+  });
+  document.getElementById('stop').addEventListener('click', function(){
+    if (synth) synth.cancel(); state.talk=0; setExpr('neutral');
+  });
+
+  document.getElementById('speed').addEventListener('input', function(e){
+    state.speed=+e.target.value; document.getElementById('spdVal').textContent=state.speed.toFixed(1);
+  });
+  document.getElementById('scale').addEventListener('input', function(e){
+    state.scale=+e.target.value; document.getElementById('scaleVal').textContent=state.scale.toFixed(2);
+  });
+  document.getElementById('blink').addEventListener('change', function(e){ state.blinkOn=e.target.checked; });
+
+  // reflex playground (client-side simulation of the app's regex layer)
+  var REFLEX = [
+    [/^(stop|cancel|quiet)$/i,'Okay, stopping.'],
+    [/^open (\w+)/i,function(m){return 'Opening '+m[1]+'…';}],
+    [/^play (.+?) on youtube$/i,function(m){return 'Playing '+m[1]+' on YouTube.';}],
+    [/^volume (\d+)/i,function(m){return 'Volume set to '+m[1]+' percent.';}],
+    [/^(volume up|volume down|mute|unmute)$/i,'Adjusting volume.'],
+    [/^brightness (\d+)/i,function(m){return 'Brightness set to '+m[1]+' percent.';}],
+    [/^flashlight (on|off)$/i,function(m){return 'Flashlight '+m[1]+'.';}],
+    [/^alarm in (\d+) minutes?$/i,function(m){return 'Timer set for '+m[1]+' minute(s).';}],
+    [/^alarm at (\d{1,2}):(\d{2})$/i,function(m){return 'Alarm set for '+m[1]+':'+m[2]+'.';}],
+    [/^call (.+)$/i,function(m){return 'Calling '+m[1]+'…';}],
+    [/^remind me (?:to )?(.+?) in (\d+) minutes?$/i,function(m){return 'Got it. In '+m[2]+' minute(s): '+m[1];}],
+    [/^search (.+)$/i,function(m){return 'Searching “'+m[1]+'”…';}],
+    [/^run (.+) in termux$/i,function(m){return 'Sent to Termux: '+m[1];}]
+  ];
+  var SAMPLES=['open whatsapp','play lo-fi beats on youtube','volume 40','flashlight on','alarm in 10 minutes','remind me to stretch in 5 minutes','search android 15','run uptime in termux','what is the time'];
+  function runCmd(text){
+    var t=(text||'').trim(); if(!t) return;
+    log('you', t);
+    for (var i=0;i<REFLEX.length;i++){ var m=t.match(REFLEX[i][0]); if(m){ var out=REFLEX[i][1]; if(typeof out==='function') out=out(m); say(out); return; } }
+    say("I heard: "+t+". Add a GGUF model on the phone for full chat.");
+  }
+  document.getElementById('run').addEventListener('click', function(){ runCmd(document.getElementById('cmd').value); });
+  document.getElementById('cmd').addEventListener('keydown', function(e){ if(e.key==='Enter') runCmd(this.value); });
+  document.getElementById('fill').addEventListener('click', function(){ document.getElementById('cmd').value=SAMPLES[Math.floor(Math.random()*SAMPLES.length)]; });
+
+  function log(who,text){
+    var c=document.getElementById('chat'); var d=document.createElement('div');
+    d.innerHTML='<b>'+who+'</b> '+text.replace(/[<>&]/g,''); c.appendChild(d); c.scrollTop=c.scrollHeight;
+  }
+
+  var clock = new THREE.Clock();
+  function loop(){
+    requestAnimationFrame(loop);
+    state.t += clock.getDelta()*state.speed;
+    var t = state.t;
+    root.position.y = Math.sin(t*1.6)*0.08;
+    root.rotation.z = Math.sin(t*1.1)*0.03;
+    state.spin += (state.targetSpin-state.spin)*0.08;
+    root.rotation.y = Math.sin(t*0.7)*0.18 + state.spin;
+    root.scale.setScalar(state.scale);
+
+    var blink = state.blinkOn && (t % 4.2) > 4.0 ? 0.12 : 1;
+    eyeL.scale.y = blink; eyeR.scale.y = blink;
+
+    var lx = (state.lookX||0)*0.06 + Math.sin(t*0.9)*0.02;
+    var ly = -(state.lookY||0)*0.03 + Math.cos(t*0.7)*0.02;
+    eyeL.position.x = -0.36+lx; eyeR.position.x = 0.36+lx;
+    eyeL.position.y = 0.22+ly; eyeR.position.y = 0.22+ly;
+
+    var e = EXPR[state.expr] || EXPR.neutral;
+    var open = e.smile + (state.talk>0 ? Math.abs(Math.sin(t*11))*0.28 : 0);
+    mouth.scale.y = 0.75+open; mouth.position.y = -0.18+open*0.05;
+    bulbMat.opacity = 0.75+Math.sin(t*3)*0.25;
+    state.talk = Math.max(0, state.talk-0.02);
+
+    renderer.render(scene,camera);
+  }
+  loop();
+  log('brahma','Hi! Pick an expression, make me talk, or run a reflex command.');
+})();
+</script>
+</body>
+</html>

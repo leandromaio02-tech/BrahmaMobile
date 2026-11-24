@@ -1,41 +1,50 @@
 # Brahma Mobile
 
-An embodied 3D AI companion for Android — a phone-sized version of the Brahma Sol idea.
-Kotlin + Jetpack Compose, `minSdk 26`, `arm64-v8a` only, no local PC required.
+[![build](https://img.shields.io/github/actions/workflow/status/leandromaio02-tech/BrahmaMobile/build.yml?branch=main)](https://github.com/leandromaio02-tech/BrahmaMobile/actions)
+[![license](https://img.shields.io/github/license/leandromaio02-tech/BrahmaMobile)](LICENSE)
+[![platform](https://img.shields.io/badge/Android-12%2B%20%C2%B7%20arm64--v8a-6C5CE7)](https://developer.android.com/ndk/guides/abis)
+
+An embodied 3D AI companion for Android — the phone-sized version of the Brahma Sol idea.
+Kotlin + Jetpack Compose, `minSdk 26`, arm64 only, low-RAM friendly, and **no PC required**:
+every push builds a signed debug APK in GitHub Actions.
+
+**[▶ Try the avatar in your browser](https://cdn.jsdelivr.net/gh/leandromaio02-tech/BrahmaMobile@main/docs/index.html)** ·
+**[⬇ Get the APK](https://github.com/leandromaio02-tech/BrahmaMobile/actions)** ·
+**[💬 Discussions](https://github.com/leandromaio02-tech/BrahmaMobile/discussions)** ·
+**[🛣 Roadmap](ROADMAP.md)** ·
+**[🤝 Contributing](CONTRIBUTING.md)**
+
+The playground is the same Three.js scene that ships inside the app — expressions,
+idle animation, blinking, eye tracking, speech synthesis, drag-to-spin, and a working
+simulation of the reflex command layer. No install needed.
 
 ## What actually works
 
 | Feature | Implementation | Notes |
 |---|---|---|
 | Floating 3D avatar | Three.js scene in a WebView, hosted by a foreground service overlay | Draggable via handle, tap to listen, idle animation, blinking, eye drift, 5 expressions. `three.min.js` is vendored in assets, so the avatar works offline. |
-| Offline brain | `dev.ffmpegkit-maintained:llama-android:0.1.1` (prebuilt llama.cpp `b9878`, CPU/NEON, arm64) | Real GGUF inference. You supply the model (see below). Without a model it falls back to a deterministic offline rules brain. |
+| Offline brain | `dev.ffmpegkit-maintained:llama-android:0.1.1` (prebuilt llama.cpp `b9878`, CPU/NEON, arm64) | Real GGUF inference. You supply the model (see below). Without one it falls back to a deterministic offline rules brain. |
 | Cloud fallback | Gemini 1.5 Flash / OpenRouter via OkHttp | Only used when the toggle is on and a key is set. |
-| Voice | Offline-preferred Android SpeechRecognizer (`EXTRA_PREFER_OFFLINE`), wake word on partial results, amplitude-based barge-in, Android TTS | On-device STT availability depends on the ROM/GApps. Barge-in uses mic RMS, no model. |
-| Instant reflexes | Regex -> Android Intents / system services, no coroutines or network | Apps, YouTube, volume, brightness, torch, alarms/timers, calls, SMS, battery, time, Wi-Fi/BT, web search, files, Termux, UI clicks. |
-| Agent tools | `ToolRegistry` | File read/list/write, reminders via AlarmManager, DuckDuckGo instant answers, Termux `RUN_COMMAND`, Accessibility-based screen read/click. |
-| Daily briefing | WorkManager + NASA APOD (DEMO_KEY) | Sets wallpaper and stores a short briefing, refreshed once a day. |
+| Voice | Offline-preferred Android SpeechRecognizer (`EXTRA_PREFER_OFFLINE`), wake word on partial results, amplitude-based barge-in, Android TTS | On-device STT availability depends on the ROM/GApps. Barge-in uses mic RMS — no model. |
+| Instant reflexes | Regex → Android Intents / system services, no coroutines or network | Apps, YouTube, volume, brightness, torch, alarms/timers, calls, SMS, battery, time, Wi-Fi/BT, web search, files, Termux, UI clicks. |
+| Agent tools | `ToolRegistry` | File read/list/write, reminders via AlarmManager, DuckDuckGo instant answers, Termux `RUN_COMMAND`, Accessibility screen read/click. |
+| Daily briefing | WorkManager + NASA APOD (DEMO_KEY) | Sets the wallpaper and stores a short briefing, refreshed daily. |
 
 **Honest limits**
-- Kokoro ONNX is **not** bundled. The working speech path is Android TTS (neural on most modern ROMs); `TtsEngine` is the single swap point if you want to add Kokoro later.
-- The wake word uses the platform's on-device recognizer with `EXTRA_PREFER_OFFLINE`. Some ROMs have no offline recognizer; in that case it falls back to network STT or you can use the MIC button.
-- The debug APK is signed with Android's standard debug key — installable by sideload, not for Play Store.
-- llama.cpp needs a GGUF file (400 MB–2 GB). It is not shipped in the APK.
+- Kokoro ONNX is **not** bundled. Android TTS is the working path; `TtsEngine` is the single swap point if you want Kokoro later.
+- The wake word leans on the platform's on-device recognizer with `EXTRA_PREFER_OFFLINE`. ROMs without one fall back to network STT, or use the MIC button.
+- Debug-signed APK: sideload only, not Play Store.
+- llama.cpp needs a GGUF (400 MB–2 GB); it is not shipped in the APK.
 
 ## Build
 
-Every push to any branch runs `.github/workflows/build.yml`:
+Every push runs `.github/workflows/build.yml`: JDK 17, Android SDK platform 34 /
+build-tools 34.0.0, Gradle 8.7 downloaded directly (no wrapper jar), then
+`gradle assembleDebug --no-daemon --stacktrace`. The artifact **`brahma-mobile-debug`**
+is the zip containing `app-debug.apk`.
 
-- JDK 17 (Temurin), Android SDK platform 34 / build-tools 34.0.0, Gradle 8.7 downloaded directly (no wrapper jar needed on a phone)
-- `gradle assembleDebug --no-daemon --stacktrace`
-- artifact: **`brahma-mobile-debug`** → `app-debug.apk`
-
-## Phone-only: push the project and get the APK
-
-### 1. Create an empty GitHub repo
-In a browser: <https://github.com/new> — name it `BrahmaMobile`, leave it empty (no README, no license).
-
-### 2. If Hermes runs on your phone (Termux/PRoot)
-The project already exists at `/root/BrahmaMobile`. In Termux:
+<details>
+<summary>Run it yourself in Termux / PRoot (phone-only)</summary>
 
 ```sh
 cd /root/BrahmaMobile
@@ -43,59 +52,37 @@ pkg update && pkg install -y git
 ./push.sh https://github.com/YOUR_USERNAME/BrahmaMobile.git
 ```
 
-If you prefer a token instead of a credential prompt:
+Set `GH_TOKEN=<pat>` in the same command to skip the credential prompt. Never paste a
+token into chat.
+</details>
 
-```sh
-GH_TOKEN=github_pat_xxx ./push.sh https://github.com/YOUR_USERNAME/BrahmaMobile.git
-```
+## Install the APK
 
-Create the PAT at GitHub → Settings → Developer settings → Personal access tokens (scope: `repo`). Do not paste it into chat.
-
-### 3. If the files are not already on the phone
-Every file is printed in the chat response. Put them in one folder on the phone
-(a code editor / Termux `nano` / GitHub web "Add file" flow), then run the same
-`cd <folder> && ./push.sh <repo-url>`.
-
-### 4. Watch the build
-GitHub → your repo → **Actions** tab → latest "Build Brahma Mobile APK" run.
-When it is green, open the run, scroll to **Artifacts**, and download
-`brahma-mobile-debug`. It is a `.zip`; unzip it with any file manager to get
-`app-debug.apk`. On the phone itself you can open the artifact link in the
-GitHub app/browser and unzip with Termux or ZArchiver.
-
-### 5. Install
-Open the APK. Android will ask to allow installs from unknown sources for your
-file manager/browser — allow it.
-
-## First-run setup on the phone
-
-Grant, from the Brahma Mobile settings screen:
-1. **Microphone** — critical.
-2. **Draw over other apps** — critical for the floating bubble.
-3. **Notifications** — needed for the foreground service and reminders (Android 13+).
-4. **Brahma Reflex (Accessibility)** — needed for UI click/screen-read tools.
-5. **Modify system settings** — only needed for brightness control.
-6. On Android 12+ also allow **Alarms & reminders** (exact alarm access), and disable **battery optimization** for Brahma. On MIUI/ColorOS/OneUI also allow autostart, floating windows, and "lock in recents".
-7. For Termux reflexes: in Termux → Settings → enable **Allow external apps** (the app sends `com.termux.RUN_COMMAND`).
-
-Tap **SHOW** in the app to launch the bubble. Drag it by the "DRAG ME" bar.
+1. Open the [Actions tab](https://github.com/leandromaio02-tech/BrahmaMobile/actions),
+   click the latest green **Build Brahma Mobile APK** run, download the
+   `brahma-mobile-debug` artifact, unzip it.
+2. Open `app-debug.apk`; allow installs from unknown sources for your browser/file manager.
+3. Grant permissions from the in-app buttons: **Microphone**, **Draw over other apps**,
+   **Notifications**, **Brahma Reflex (Accessibility)**. Brightness also needs
+   **Modify system settings**; reminders need **Alarms & reminders** on Android 12+.
+4. Disable battery optimization; on MIUI/ColorOS/OneUI also allow autostart, floating
+   windows, and "lock in recents".
+5. Tap **SHOW**, drag the bubble by the "DRAG ME" bar.
 
 ## Enable the real offline brain
 
-1. On the phone, download a Q4_K_M GGUF, for example
-   `qwen2.5-1.5b-instruct-q4_k_m.gguf` (≈1 GB) or the 3B version (≈2 GB).
-   Source: <https://huggingface.co/Qwen/Qwen2.5-1.5B-Instruct-GGUF>
-2. In Brahma Mobile → Brain → **IMPORT GGUF FROM PHONE** and pick the file.
-   It is copied to `Android/data/com.brahma.mobile/files/models/` and loaded
-   with 2048-token context, CPU only, 2–4 threads.
-3. The header should then say `On-device · llama.cpp`. On a 4–6 GB phone use
-   the 1.5B/0.5B model; 3B needs roughly 2.5–3.5 GB free RAM.
+1. Download a Q4_K_M GGUF on the phone, e.g.
+   [`qwen2.5-1.5b-instruct-q4_k_m.gguf`](https://huggingface.co/Qwen/Qwen2.5-1.5B-Instruct-GGUF)
+   (~1 GB) or the 3B version (~2 GB).
+2. In the app: **Brain → IMPORT GGUF FROM PHONE**, pick the file. It copies to
+   `Android/data/com.brahma.mobile/files/models/` and loads with 2048 context, CPU only,
+   2–4 threads.
+3. Header should read `On-device · llama.cpp`. On 4–6 GB phones use 0.5B/1.5B;
+   3B wants roughly 2.5–3.5 GB free RAM.
 
-## Cloud fallback
-
-In Brain: switch **Cloud fallback** on, pick Gemini or OpenRouter, and paste a key.
-The key is stored only in the app's SharedPreferences. Local processing is always
-preferred when a model is loaded and the cloud toggle is off.
+Cloud fallback: toggle **Cloud fallback**, pick Gemini or OpenRouter, paste a key.
+Keys live only in SharedPreferences; local inference is always preferred when a model
+is loaded and the cloud toggle is off.
 
 ## Reflex command examples
 
@@ -115,19 +102,26 @@ what's on screen       what time is it
 ## Project layout
 
 ```
-.github/workflows/build.yml
-app/build.gradle.kts
-app/src/main/AndroidManifest.xml
-app/src/main/java/com/brahma/mobile/...
-app/src/main/res/...
-app/src/main/assets/avatar/index.html
-app/src/main/assets/avatar/three.min.js
-push.sh
-README.md
+.github/workflows/build.yml      CI: build + upload APK
+.github/ISSUE_TEMPLATE/          bug report + feature request templates
+docs/index.html                  interactive browser playground (GitHub Pages / jsDelivr)
+app/src/main/assets/avatar/      Three.js avatar (index.html + vendored three.min.js)
+app/src/main/java/com/brahma/mobile/
+  overlay/                       floating bubble service
+  brain/                         llama.cpp engine, cloud engine, rules fallback
+  voice/                         wake word, STT, barge-in, TTS
+  reflex/                        <50 ms regex commands + accessibility service
+  tools/                         file / reminder / web / Termux / UI tools
+  ui/                            Compose settings screen
+  wallpaper/                     NASA APOD fetch + daily worker
+push.sh                          phone-friendly git push helper
 ```
 
-## Credits / licenses
+## Credits
 
-App code written from scratch for this project. Third parties: Three.js (MIT),
-llama.cpp (MIT, via `llama-android` MIT), OkHttp (Apache-2.0), AndroidX (Apache-2.0).
-NASA APOD data is public-domain courtesy of NASA.
+App code written from scratch. Third parties: [Three.js](https://threejs.org) (MIT),
+[llama.cpp](https://github.com/ggml-org/llama.cpp) via the
+[llama-android](https://github.com/ffmpegkit-maintained/llama-android) AAR (MIT),
+OkHttp and AndroidX (Apache-2.0). NASA APOD imagery is public-domain courtesy of NASA.
+
+Licensed under [MIT](LICENSE). Contributions welcome — see [CONTRIBUTING.md](CONTRIBUTING.md).

@@ -1,0 +1,8 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Discussions
+    url: https://github.com/leandromaio02-tech/BrahmaMobile/discussions
+    about: Questions, ideas, and show-and-tell belong here.
+  - name: Reflex command cheatsheet
+    url: https://github.com/leandromaio02-tech/BrahmaMobile#reflex-command-examples
+    about: See everything the instant (no-model) command layer understands.
