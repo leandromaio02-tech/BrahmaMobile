@@ -115,6 +115,25 @@ run uptime in termux   click Send
 what's on screen       what time is it
 ```
 
+## Control your phone with Hermes (MCP)
+
+A bundled `phone` MCP server exposes the device over adb: screenshots, UI tree,
+tap/swipe/type/key, app launch and package listing. It runs everything as the adb
+shell user, which is what makes input injection legal (an unprivileged app uid gets
+`SecurityException` on `input tap`).
+
+```sh
+# one time: enable Developer options -> Wireless debugging on the phone
+tools/phone-connect.sh      # pairs + connects adb
+hermes mcp list             # shows 'phone' (12 tools)
+# then in Hermes: /reload-mcp  (or start a new session)
+```
+
+Tools: `phone_status`, `phone_connect`, `phone_capture`, `phone_ui_dump`,
+`phone_tap`, `phone_swipe`, `phone_type`, `phone_key`, `phone_launch`,
+`phone_list_packages`, `phone_current_app`, `phone_shell`.
+Server source: `~/.hermes/mcp-servers/phone/server.mjs`.
+
 ## Project layout
 
 ```
