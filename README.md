@@ -8,7 +8,7 @@ An embodied 3D AI companion for Android — the phone-sized version of the Brahm
 Kotlin + Jetpack Compose, `minSdk 26`, arm64 only, low-RAM friendly, and **no PC required**:
 every push builds a signed debug APK in GitHub Actions.
 
-**[▶ Try the avatar in your browser](https://cdn.jsdelivr.net/gh/leandromaio02-tech/BrahmaMobile@main/docs/index.html)** ·
+**[▶ Try the avatar in your browser](https://leandromaio02-tech.github.io/BrahmaMobile/)** ·
 **[⬇ Get the APK](https://github.com/leandromaio02-tech/BrahmaMobile/actions)** ·
 **[💬 Discussions](https://github.com/leandromaio02-tech/BrahmaMobile/discussions)** ·
 **[🛣 Roadmap](ROADMAP.md)** ·
@@ -17,6 +17,10 @@ every push builds a signed debug APK in GitHub Actions.
 The playground is the same Three.js scene that ships inside the app — expressions,
 idle animation, blinking, eye tracking, speech synthesis, drag-to-spin, and a working
 simulation of the reflex command layer. No install needed.
+
+> First time? Enable it once in the repo: **Settings → Pages → Build and deployment →
+> Source: "Deploy from a branch" → Branch `main`, folder `/docs` → Save.** The page then
+> lives at the link above.
 
 ## What actually works
 
