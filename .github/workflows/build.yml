@@ -7,7 +7,9 @@ on:
   workflow_dispatch:
 
 permissions:
-  contents: read
+  # contents:write lets the job update the rolling "latest" release that backs
+  # the one-tap install link. Pull-request runs are read-only by GitHub anyway.
+  contents: write
 
 jobs:
   build:
@@ -61,3 +63,17 @@ jobs:
           path: app/build/outputs/apk/debug/app-debug.apk
           if-no-files-found: error
           retention-days: 90
+
+      # Rolling release: same URL always serves the newest APK. No PAT required —
+      # Actions supplies a token via secrets.GITHUB_TOKEN.
+      - name: Publish rolling release (one-tap APK)
+        if: github.event_name == 'push'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          cp app/build/outputs/apk/debug/app-debug.apk /tmp/BrahmaMobile-debug.apk
+          gh release view latest >/dev/null 2>&1 || \
+            gh release create latest \
+              --title "Brahma Mobile (latest)" \
+              --notes "Rolling debug build of Brahma Mobile. Updated automatically on every push. One-tap install: https://github.com/leandromaio02-tech/BrahmaMobile/releases/download/latest/BrahmaMobile-debug.apk"
+          gh release upload latest /tmp/BrahmaMobile-debug.apk --clobber

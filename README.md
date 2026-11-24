@@ -8,8 +8,9 @@ An embodied 3D AI companion for Android — the phone-sized version of the Brahm
 Kotlin + Jetpack Compose, `minSdk 26`, arm64 only, low-RAM friendly, and **no PC required**:
 every push builds a signed debug APK in GitHub Actions.
 
+**[📲 One-tap install (always the newest APK)](https://github.com/leandromaio02-tech/BrahmaMobile/releases/download/latest/BrahmaMobile-debug.apk)** ·
 **[▶ Try the avatar in your browser](https://leandromaio02-tech.github.io/BrahmaMobile/)** ·
-**[⬇ Get the APK](https://github.com/leandromaio02-tech/BrahmaMobile/actions)** ·
+**[⬇ Build history](https://github.com/leandromaio02-tech/BrahmaMobile/actions)** ·
 **[💬 Discussions](https://github.com/leandromaio02-tech/BrahmaMobile/discussions)** ·
 **[🛣 Roadmap](ROADMAP.md)** ·
 **[🤝 Contributing](CONTRIBUTING.md)**
@@ -62,16 +63,27 @@ token into chat.
 
 ## Install the APK
 
-1. Open the [Actions tab](https://github.com/leandromaio02-tech/BrahmaMobile/actions),
-   click the latest green **Build Brahma Mobile APK** run, download the
-   `brahma-mobile-debug` artifact, unzip it.
-2. Open `app-debug.apk`; allow installs from unknown sources for your browser/file manager.
-3. Grant permissions from the in-app buttons: **Microphone**, **Draw over other apps**,
+**One tap, always current:**
+
+```
+https://github.com/leandromaio02-tech/BrahmaMobile/releases/download/latest/BrahmaMobile-debug.apk
+```
+
+Open that on your phone and install it. Every push rebuilds the app and replaces this
+exact asset, so the link never goes stale — bookmark it or add it to your home screen.
+
+Manual route (same file): [Actions tab](https://github.com/leandromaio02-tech/BrahmaMobile/actions)
+→ latest green **Build Brahma Mobile APK** run → `brahma-mobile-debug` artifact → unzip.
+
+Then:
+
+1. Open the APK; allow installs from unknown sources for your browser/file manager.
+2. Grant permissions from the in-app buttons: **Microphone**, **Draw over other apps**,
    **Notifications**, **Brahma Reflex (Accessibility)**. Brightness also needs
    **Modify system settings**; reminders need **Alarms & reminders** on Android 12+.
-4. Disable battery optimization; on MIUI/ColorOS/OneUI also allow autostart, floating
+3. Disable battery optimization; on MIUI/ColorOS/OneUI also allow autostart, floating
    windows, and "lock in recents".
-5. Tap **SHOW**, drag the bubble by the "DRAG ME" bar.
+4. Tap **SHOW**, drag the bubble by the "DRAG ME" bar.
 
 ## Enable the real offline brain
 
