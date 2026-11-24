@@ -1,11 +1,11 @@
 #!/bin/sh
-# One-time pairing helper for the Brahma Phone MCP server.
+# Helpers for getting the Brahma Phone MCP server onto the device.
 #
-# On the phone: Settings > System > Developer options > Wireless debugging.
-#   1. "Pair device with pairing code"  -> host:port + 6-digit code
-#   2. Main Wireless debugging screen  -> "IP address & Port" (different port)
+# Usage:
+#   sh tools/phone-connect.sh                # full flow: pair, then connect
+#   sh tools/phone-connect.sh --connect-only # just try adb connect (no pairing)
 #
-# Then in Termux run this script. It never prints the code anywhere else.
+# Enable first: Settings > System > Developer options > Wireless debugging.
 set -e
 
 if ! command -v adb >/dev/null 2>&1; then
@@ -13,7 +13,17 @@ if ! command -v adb >/dev/null 2>&1; then
     exit 1
 fi
 
+if [ "$1" = "--connect-only" ]; then
+    printf "Connection host:port (Wireless debugging -> 'IP address & Port'): "
+    read -r CONN
+    adb connect "$CONN"
+    adb devices
+    exit 0
+fi
+
 echo "== Pair =="
+echo "Tip: use split-screen (Recents -> app icon -> Split screen) so the pairing"
+echo "sheet stays alive while you type into Termux."
 printf "Pairing host:port (e.g. 127.0.0.1:41234): "
 read -r PAIR
 printf "Pairing code: "
