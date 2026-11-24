@@ -1,0 +1,144 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<style>
+  html,body{margin:0;padding:0;width:100%;height:100%;background:transparent;overflow:hidden;}
+  canvas{display:block;touch-action:none;}
+</style>
+</head>
+<body>
+<script src="three.min.js"></script>
+<script>
+(function(){
+  if (!window.THREE) {
+    var s = document.createElement('script');
+    s.src = 'https://unpkg.com/three@0.160.0/build/three.min.js';
+    s.onload = boot;
+    document.head.appendChild(s);
+  } else { boot(); }
+
+  function boot(){
+    var scene = new THREE.Scene();
+    var camera = new THREE.PerspectiveCamera(45, 1, 0.1, 100);
+    camera.position.set(0, 0, 7.2);
+    var renderer = new THREE.WebGLRenderer({alpha:true, antialias:true});
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+    renderer.setClearColor(0x000000, 0);
+    document.body.appendChild(renderer.domElement);
+
+    function resize(){
+      var w = window.innerWidth || 300, h = window.innerHeight || 320;
+      renderer.setSize(w, h, false);
+      camera.aspect = w / h;
+      camera.updateProjectionMatrix();
+    }
+    window.addEventListener('resize', resize);
+    resize();
+
+    scene.add(new THREE.AmbientLight(0xffffff, 0.85));
+    var key = new THREE.DirectionalLight(0xffffff, 1.1);
+    key.position.set(3, 4, 5); scene.add(key);
+    var rim = new THREE.PointLight(0x6c5ce7, 1.3);
+    rim.position.set(-3, -2, 3); scene.add(rim);
+
+    var root = new THREE.Group();
+    scene.add(root);
+
+    var bodyMat = new THREE.MeshPhongMaterial({color:0x6c5ce7, shininess:60});
+    var body = new THREE.Mesh(new THREE.SphereGeometry(1.22, 32, 24), bodyMat);
+    body.scale.set(1, 1.08, 0.92);
+    body.position.y = -0.35;
+    root.add(body);
+
+    var visorMat = new THREE.MeshPhongMaterial({color:0x10131f, shininess:110, transparent:true, opacity:0.97});
+    var visor = new THREE.Mesh(new THREE.SphereGeometry(0.95, 32, 24), visorMat);
+    visor.scale.set(1, 0.72, 0.55);
+    visor.position.set(0, 0.18, 0.95);
+    root.add(visor);
+
+    var eyeGeo = new THREE.SphereGeometry(0.17, 20, 16);
+    var eyeMat = new THREE.MeshBasicMaterial({color:0x7ef9ff});
+    var eyeL = new THREE.Mesh(eyeGeo, eyeMat);
+    var eyeR = new THREE.Mesh(eyeGeo, eyeMat);
+    eyeL.position.set(-0.36, 0.22, 1.42);
+    eyeR.position.set(0.36, 0.22, 1.42);
+    root.add(eyeL, eyeR);
+
+    var mouthMat = new THREE.MeshBasicMaterial({color:0x7ef9ff});
+    var mouth = new THREE.Mesh(new THREE.TorusGeometry(0.27, 0.045, 8, 24, Math.PI), mouthMat);
+    mouth.position.set(0, -0.18, 1.45);
+    mouth.rotation.z = Math.PI;
+    root.add(mouth);
+
+    var antenna = new THREE.Mesh(new THREE.CylinderGeometry(0.035, 0.035, 0.5, 8), bodyMat);
+    antenna.position.set(0, 1.28, 0);
+    root.add(antenna);
+    var bulbMat = new THREE.MeshBasicMaterial({color:0xff7ab6, transparent:true});
+    var bulb = new THREE.Mesh(new THREE.SphereGeometry(0.14, 16, 12), bulbMat);
+    bulb.position.set(0, 1.58, 0);
+    root.add(bulb);
+
+    var EXPRESSIONS = {
+      neutral:   {eye:0x7ef9ff, body:0x6c5ce7, bulb:0xff7ab6, smile:0.00},
+      happy:     {eye:0xffe066, body:0x00b894, bulb:0xffe066, smile:0.55},
+      thinking:  {eye:0xa29bfe, body:0x574b90, bulb:0xa29bfe, smile:-0.15},
+      surprised: {eye:0xff7675, body:0xe17055, bulb:0xff7675, smile:0.28},
+      speaking:  {eye:0x81ecec, body:0x0984e3, bulb:0x81ecec, smile:0.20}
+    };
+
+    var state = {expr:'neutral', talk:0, t:0};
+
+    window.brahmaSetExpression = function(name){
+      var e = EXPRESSIONS[name] || EXPRESSIONS.neutral;
+      state.expr = EXPRESSIONS[name] ? name : 'neutral';
+      eyeMat.color.setHex(e.eye);
+      bodyMat.color.setHex(e.body);
+      bulbMat.color.setHex(e.bulb);
+    };
+    window.brahmaSpeak = function(){
+      window.brahmaSetExpression('speaking');
+      state.talk = 1;
+    };
+    window.brahmaIdle = function(){
+      window.brahmaSetExpression('neutral');
+      state.talk = 0;
+    };
+
+    renderer.domElement.addEventListener('pointerdown', function(){
+      if (window.Brahma && window.Brahma.tapped) window.Brahma.tapped();
+    });
+
+    var clock = new THREE.Clock();
+    function loop(){
+      requestAnimationFrame(loop);
+      state.t += clock.getDelta();
+      var t = state.t;
+      root.position.y = Math.sin(t*1.6)*0.08;
+      root.rotation.y = Math.sin(t*0.7)*0.18;
+      root.rotation.z = Math.sin(t*1.1)*0.03;
+
+      var blink = (t % 4.2) > 4.0 ? 0.12 : 1;
+      eyeL.scale.y = blink; eyeR.scale.y = blink;
+
+      var lx = Math.sin(t*0.9)*0.06, ly = Math.cos(t*0.7)*0.03;
+      eyeL.position.x = -0.36 + lx; eyeR.position.x = 0.36 + lx;
+      eyeL.position.y = 0.22 + ly; eyeR.position.y = 0.22 + ly;
+
+      var e = EXPRESSIONS[state.expr] || EXPRESSIONS.neutral;
+      var open = e.smile + (state.talk > 0 ? Math.abs(Math.sin(t*11))*0.28 : 0);
+      mouth.scale.y = 0.75 + open;
+      mouth.position.y = -0.18 + open*0.05;
+      bulbMat.opacity = 0.75 + Math.sin(t*3)*0.25;
+      state.talk = Math.max(0, state.talk - 0.012);
+
+      renderer.render(scene, camera);
+    }
+    loop();
+    if (window.Brahma && window.Brahma.ready) window.Brahma.ready();
+  }
+})();
+</script>
+</body>
+</html>

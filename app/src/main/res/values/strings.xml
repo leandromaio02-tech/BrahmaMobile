@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Brahma Mobile</string>
+    <string name="accessibility_label">Brahma Reflex</string>
+    <string name="overlay_channel">Brahma Avatar</string>
+    <string name="overlay_channel_desc">Floating 3D companion overlay</string>
+</resources>
