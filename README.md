@@ -122,17 +122,24 @@ tap/swipe/type/key, app launch and package listing. It runs everything as the ad
 shell user, which is what makes input injection legal (an unprivileged app uid gets
 `SecurityException` on `input tap`).
 
+Verified working on a Galaxy Z Flip (SM-F711B, Android 15): screenshot capture at
+1080x2640, live UI dump with tap coordinates, foreground-app detection, battery
+status.
+
 ```sh
 # one time: enable Developer options -> Wireless debugging on the phone
-tools/phone-connect.sh      # pairs + connects adb
-hermes mcp list             # shows 'phone' (12 tools)
+tools/phone-connect.sh          # pairs + connects adb (split-screen keeps the code sheet alive)
+cd tools/phone-mcp && npm install
+printf 'Y\n' | hermes mcp add phone --command "$(command -v node)" \
+  --env PHONE_ADB_BIN="$(command -v adb)" --args "$PWD/server.mjs"
+hermes mcp test phone           # -> Connected, Tools discovered: 12
 # then in Hermes: /reload-mcp  (or start a new session)
 ```
 
 Tools: `phone_status`, `phone_connect`, `phone_capture`, `phone_ui_dump`,
 `phone_tap`, `phone_swipe`, `phone_type`, `phone_key`, `phone_launch`,
 `phone_list_packages`, `phone_current_app`, `phone_shell`.
-Server source: `~/.hermes/mcp-servers/phone/server.mjs`.
+Source: [`tools/phone-mcp/`](tools/phone-mcp/).
 
 ## Project layout
 

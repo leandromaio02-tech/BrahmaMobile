@@ -1,0 +1,10 @@
+{
+  "name": "brahma-phone-mcp",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "MCP server that gives Hermes eyes and hands on the phone over adb.",
+  "scripts": {
+    "start": "node server.mjs"
+  }
+}

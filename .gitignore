@@ -9,3 +9,5 @@
 .cxx
 local.properties
 app/build/
+
+tools/phone-mcp/node_modules/
