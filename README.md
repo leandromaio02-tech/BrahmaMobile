@@ -1,7 +1,7 @@
 # Brahma Mobile
 
 [![build](https://img.shields.io/github/actions/workflow/status/leandromaio02-tech/BrahmaMobile/build.yml?branch=main)](https://github.com/leandromaio02-tech/BrahmaMobile/actions)
-[![license](https://img.shields.io/github/license/leandromaio02-tech/BrahmaMobile)](LICENSE)
+[![license](https://img.shields.io/badge/license-MIT-6C5CE7)](LICENSE)
 [![platform](https://img.shields.io/badge/Android-12%2B%20%C2%B7%20arm64--v8a-6C5CE7)](https://developer.android.com/ndk/guides/abis)
 
 An embodied 3D AI companion for Android — the phone-sized version of the Brahma Sol idea.
