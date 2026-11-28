@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">J.A.R.V.I.S.</string>
+    <string name="channel_voice">Voice session</string>
+    <string name="channel_screen">Screen sharing</string>
+    <string name="channel_tasks">Task status</string>
+    <string name="channel_reminders">Reminders</string>
+    <string name="accessibility_label">JARVIS interaction</string>
+    <string name="accessibility_description">Allows JARVIS to read and interact with the interface only after you explicitly enable this service in Android settings.</string>
+</resources>
